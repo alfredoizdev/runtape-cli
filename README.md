@@ -6,23 +6,42 @@
 
 ## Status
 
-**Pre-release.** The CLI is in active development. Commands (`login`, `install`, `push`, `uninstall`, `status`, `runs`) land in v0.1. Today this package ships:
+v0.1 — MVP. The CLI captures Claude Code sessions via hooks and streams them to a Hindsight backend.
 
-- The CLI binary scaffold (`hindsight --version`, `hindsight --help`).
-- The Zod event schemas under the `hindsight/types` subpath export — consumed by the Hindsight backend for ingestion validation.
-
-## What it will do (v0.1)
-
-Installs lightweight hooks into Claude Code so every tool call, file edit, command, and error is captured and streamed to your Hindsight dashboard — with zero changes to your code.
+## Install
 
 ```bash
 npm install -g hindsight
-hindsight login
-hindsight install   # adds hooks to ~/.claude/settings.json
-# now run Claude Code normally
 ```
 
-Open your dashboard and watch your session replay in real time.
+(Requires Node.js ≥ 20.)
+
+## Get started
+
+```bash
+hindsight login        # paste the API key from your hindsight.dev dashboard
+hindsight install      # add hooks to ~/.claude/settings.json
+# …run Claude Code normally…
+hindsight status       # buffer state, server reachability, flusher PID
+hindsight uninstall    # remove the hooks when you're done
+```
+
+## How it works
+
+`hindsight install` adds entries to `~/.claude/settings.json` so that Claude Code fires `hindsight push --event <HookName>` on every relevant hook event. Each invocation appends one validated JSON line to `~/.hindsight/buffer/<session_id>.ndjson` (sub-10ms) and lazily spawns a detached flusher daemon. The daemon batches events (up to 100 per POST) and ships them to the backend with exponential backoff on transient failures. It exits after 30s of idle.
+
+## State on disk
+
+```
+~/.hindsight/
+  config.json                 # api_key (chmod 600), server_url
+  buffer/<session_id>.ndjson  # pending events
+  seq/<session_id>            # monotonic sequence counter
+  flusher.pid                 # daemon PID
+  flusher.log                 # daemon log (append-only)
+```
+
+Override the home dir with `HINDSIGHT_HOME` (useful for tests). Override the server with `HINDSIGHT_API_URL` or `hindsight login --server-url <url>`.
 
 ## Subpath exports
 
