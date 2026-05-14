@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
+import { chmod, mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { z } from 'zod';
 import { paths } from './paths.js';
@@ -30,6 +30,9 @@ export async function readConfig(): Promise<Config | null> {
 export async function writeConfig(c: Config): Promise<void> {
   await mkdir(dirname(paths.config), { recursive: true });
   await writeFile(paths.config, JSON.stringify(c, null, 2) + '\n', { mode: 0o600 });
+  // writeFile's `mode` is only applied on create. Re-chmod explicitly so a re-login
+  // tightens permissions if the file was previously loosened (e.g. `chmod 644`).
+  await chmod(paths.config, 0o600);
 }
 
 export async function clearConfig(): Promise<void> {
