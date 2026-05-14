@@ -6,9 +6,12 @@
 
 ## Status
 
-**Pre-release.** This repo is a placeholder. The CLI is in active development. Follow [@hindsight_dev](https://twitter.com/hindsight_dev) for launch.
+**Pre-release.** The CLI is in active development. Commands (`login`, `install`, `push`, `uninstall`, `status`, `runs`) land in v0.1. Today this package ships:
 
-## What it does (planned)
+- The CLI binary scaffold (`hindsight --version`, `hindsight --help`).
+- The Zod event schemas under the `hindsight/types` subpath export — consumed by the Hindsight backend for ingestion validation.
+
+## What it will do (v0.1)
 
 Installs lightweight hooks into Claude Code so every tool call, file edit, command, and error is captured and streamed to your Hindsight dashboard — with zero changes to your code.
 
@@ -21,9 +24,19 @@ hindsight install   # adds hooks to ~/.claude/settings.json
 
 Open your dashboard and watch your session replay in real time.
 
+## Subpath exports
+
+Backend services that ingest Hindsight events can import the shared Zod schemas:
+
+```ts
+import { HindsightEvent, IngestionRequest } from 'hindsight/types';
+```
+
+The schemas live in `src/types.ts`. The package's `exports` map points TypeScript at the source file (no build step required for type consumers) and Node at the compiled `dist/types.js`.
+
 ## Open source
 
-The CLI is MIT licensed. You can audit exactly what's captured and what's sent. The Hindsight backend (dashboard, ingestion API) is a closed SaaS at [hindsight.dev](https://hindsight.dev).
+MIT licensed. Audit exactly what's captured. The Hindsight backend (dashboard, ingestion API) is closed-source SaaS at [hindsight.dev](https://hindsight.dev).
 
 ## Repos
 
