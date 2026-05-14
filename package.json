@@ -1,0 +1,47 @@
+{
+  "name": "hindsight",
+  "version": "0.0.0",
+  "description": "Flight recorder for AI coding agents. Captures Claude Code sessions for replay in hindsight.dev.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "hindsight": "./bin/hindsight.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./src/types.ts",
+      "default": "./dist/types.js"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
