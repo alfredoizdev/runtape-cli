@@ -34,7 +34,8 @@ export async function setupCommand(opts: { noBrowser?: boolean }): Promise<numbe
 
   try {
     process.stdout.write('\nRuntape setup\n');
-    process.stdout.write('Let\'s get your Claude Code runs captured.\n\n');
+    process.stdout.write('Let\'s get your Claude Code runs captured.\n');
+    process.stdout.write('(Press Enter at any prompt to accept the default shown in [brackets].)\n\n');
 
     // Step 1 — short-circuit if already configured
     const existing = await readConfig();
@@ -51,7 +52,7 @@ export async function setupCommand(opts: { noBrowser?: boolean }): Promise<numbe
     // Step 2 — server URL
     const suggestedUrl = defaultServerUrl();
     process.stdout.write(`Step 1/3 — Backend\n`);
-    const urlInput = (await rl.question(`Server URL [${suggestedUrl}]: `)).trim();
+    const urlInput = (await rl.question(`Server URL [${suggestedUrl}] (Enter to use this): `)).trim();
     const serverUrl = urlInput === '' ? suggestedUrl : urlInput;
 
     // Step 3 — open dashboard for the user to grab their key
