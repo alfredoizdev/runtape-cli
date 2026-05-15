@@ -27,6 +27,40 @@ export type MapResult =
   | { kind: 'event'; event: MappedEvent }
   | { kind: 'drop'; reason: string };
 
+// PostToolUse tool_response shapes vary by tool. We look at the canonical
+// signals each tool emits and collapse them into a uniform (is_error, message)
+// pair so the server doesn't need per-tool knowledge.
+//   - Anthropic-tagged: { is_error: true, content: [{text}] } (the official
+//     content-block error form used by some Claude Code tools).
+//   - Bash: { interrupted, stdout, stderr, output, ... }. Non-zero exits also
+//     surface in stderr and an explicit `exitCode` when available.
+//   - Edit/Write/MultiEdit: success returns a structured payload; errors
+//     return `{ error: '...' }`.
+function inspectToolResponse(tool_response: unknown): { is_error: boolean; error_message?: string } {
+  if (!tool_response || typeof tool_response !== 'object') return { is_error: false };
+  const r = tool_response as Record<string, unknown>;
+  if (r.is_error === true) {
+    const content = r.content;
+    if (Array.isArray(content)) {
+      for (const block of content) {
+        if (block && typeof block === 'object' && 'text' in block) {
+          const t = (block as { text?: unknown }).text;
+          if (typeof t === 'string') return { is_error: true, error_message: t };
+        }
+      }
+    }
+    if (typeof r.message === 'string') return { is_error: true, error_message: r.message };
+    return { is_error: true };
+  }
+  if (typeof r.error === 'string' && r.error.trim() !== '') {
+    return { is_error: true, error_message: r.error };
+  }
+  if (r.interrupted === true) {
+    return { is_error: true, error_message: 'Interrupted' };
+  }
+  return { is_error: false };
+}
+
 // Maps a Claude hook payload + the hook name we were invoked with into a RuntapeEvent.
 // Returns { kind: 'drop' } for Notification or unknown events (we just exit cleanly).
 export function mapHookPayload(
@@ -62,7 +96,8 @@ export function mapHookPayload(
         tool_use_id: payload.tool_use_id,
       };
       break;
-    case 'PostToolUse':
+    case 'PostToolUse': {
+      const err = inspectToolResponse(payload.tool_response);
       candidate = {
         ...base,
         type: 'tool_call',
@@ -71,8 +106,11 @@ export function mapHookPayload(
         tool_response: payload.tool_response,
         tool_use_id: payload.tool_use_id,
         duration_ms: payload.duration_ms,
+        is_error: err.is_error,
+        error_message: err.error_message,
       };
       break;
+    }
     case 'Stop':
       candidate = {
         ...base,

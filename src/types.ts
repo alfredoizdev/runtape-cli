@@ -39,6 +39,27 @@ export const ToolCallEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
   tool_response: z.unknown(),
   tool_use_id: z.string().min(1),
   duration_ms: z.number().nonnegative(),
+  // Set by the CLI when the tool_response signals an error (Bash non-zero
+  // exit, Edit/Write rejection, tool_response.is_error, etc.). Optional so
+  // older CLI versions stay forward-compatible.
+  is_error: z.boolean().optional(),
+  error_message: z.string().optional(),
+});
+
+// Emitted by the CLI on Stop / PostToolUse after scanning the Claude Code
+// transcript JSONL. One event per assistant message we haven't seen yet,
+// keyed by message_uuid so re-deliveries dedupe at the server. Carries the
+// model identifier and token usage for that turn — the only place either
+// datum is available in Claude Code's emit chain.
+export const AssistantTurnEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
+  type: z.literal('assistant_turn'),
+  message_uuid: z.string().min(1),
+  model: z.string().min(1),
+  input_tokens: z.number().int().nonnegative(),
+  output_tokens: z.number().int().nonnegative(),
+  cache_read_tokens: z.number().int().nonnegative().default(0),
+  cache_creation_tokens: z.number().int().nonnegative().default(0),
+  text: z.string().optional(),
 });
 
 export const SubagentEndEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
@@ -61,6 +82,7 @@ export const RuntapeEvent = z.discriminatedUnion('type', [
   UserPromptEvent,
   ToolAttemptEvent,
   ToolCallEvent,
+  AssistantTurnEvent,
   SubagentEndEvent,
   SessionEndEvent,
 ]);

@@ -6,7 +6,7 @@
 
 ## Status
 
-v0.1 — MVP. The CLI captures Claude Code sessions via hooks and streams them to a Runtape backend.
+v0.2 — Adds model + token usage capture per turn and tool error surfacing.
 
 ## Install
 
@@ -44,11 +44,12 @@ If you prefer the granular commands instead of the wizard, `runtape login` and `
 
 ```
 ~/.runtape/
-  config.json                 # api_key (chmod 600), server_url
-  buffer/<session_id>.ndjson  # pending events
-  seq/<session_id>            # monotonic sequence counter
-  flusher.pid                 # daemon PID
-  flusher.log                 # daemon log (append-only)
+  config.json                  # api_key (chmod 600), server_url
+  buffer/<session_id>.ndjson   # pending events
+  seq/<session_id>             # monotonic sequence counter
+  transcript/<session_id>      # uuids of assistant turns already emitted (v0.2+)
+  flusher.pid                  # daemon PID
+  flusher.log                  # daemon log (append-only)
 ```
 
 Override the home dir with `RUNTAPE_HOME` (useful for tests). Override the server with `RUNTAPE_API_URL` or `runtape login --server-url <url>`.
@@ -63,6 +64,27 @@ import { RuntapeEvent, IngestionRequest } from "runtape/types";
 
 The schemas live in `src/types.ts`. The package's `exports` map points TypeScript at the source file (no build step required for type consumers) and Node at the compiled `dist/types.js`.
 
+## Changelog
+
+### 0.2.0 — 2026-05-15
+
+- **Model + token usage per turn.** The CLI now reads the Claude Code transcript JSONL on `PostToolUse` / `Stop` / `SubagentStop` and emits a new `assistant_turn` event for every assistant message, carrying `model`, `input_tokens`, `output_tokens`, `cache_read_tokens`, and `cache_creation_tokens`. The dashboard surfaces a per-turn model + cost pill and a run-level total.
+- **Tool error surfacing.** `tool_call` events now carry `is_error` + `error_message` (derived from the tool response shape — Bash exits, Edit/Write rejections, `is_error` content blocks, interrupts). Errored tools are visible in the run timeline without expanding the step.
+- **State.** Adds `~/.runtape/transcript/<session_id>` to track which assistant message uuids have already been emitted (idempotent scans across hook fires).
+
+To upgrade:
+
+```bash
+npm install -g runtape@latest
+runtape install   # safe to re-run; refreshes the hook entries
+```
+
+No changes to the existing hook commands or config file format.
+
+### 0.1.x
+
+Initial MVP. Hook-based capture of Claude Code sessions (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`, `SubagentStop`), buffered to disk and flushed by a detached daemon.
+
 ## Open source
 
 MIT licensed. Audit exactly what's captured. The Runtape backend (dashboard, ingestion API) is closed-source SaaS at [runtape.dev](https://runtape.dev).
@@ -70,7 +92,7 @@ MIT licensed. Audit exactly what's captured. The Runtape backend (dashboard, ing
 ## Repos
 
 - This repo (`runtape`) — the open-source CLI
-- `runtape-mcp` — MCP server for Runtape (coming v0.2)
+- `runtape-mcp` — MCP server for Runtape (planned)
 
 ## License
 

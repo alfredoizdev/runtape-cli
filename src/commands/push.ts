@@ -4,6 +4,8 @@ import { nextSequence } from '../lib/sequence.js';
 import { appendEvent } from '../lib/buffer.js';
 import { readConfig } from '../lib/config.js';
 import { resolveCliBinPath } from '../lib/cli-bin.js';
+import { readNewAssistantTurns, persistCursor } from '../lib/transcript.js';
+import type { RuntapeEvent } from '../types.js';
 
 async function readStdin(): Promise<string> {
   if (process.stdin.isTTY) return '';
@@ -68,6 +70,49 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
     }
 
     await appendEvent(sessionId, result.event);
+
+    // After the primary event lands in the buffer, scan the transcript for any
+    // new assistant turns and emit one assistant_turn event per uuid we haven't
+    // seen. PostToolUse and Stop are the hooks that follow assistant output;
+    // scanning on other hooks is cheap (no new turns) and harmless.
+    if (opts.event === 'PostToolUse' || opts.event === 'Stop' || opts.event === 'SubagentStop') {
+      const transcriptPath = typeof payload.transcript_path === 'string' ? payload.transcript_path : '';
+      if (transcriptPath !== '') {
+        try {
+          const { turns, seen } = await readNewAssistantTurns(sessionId, transcriptPath);
+          const newlyEmitted: string[] = [];
+          for (const t of turns) {
+            const seq = await nextSequence(sessionId);
+            const ev: RuntapeEvent = {
+              type: 'assistant_turn',
+              session_id: sessionId,
+              transcript_path: transcriptPath,
+              cwd: typeof payload.cwd === 'string' ? payload.cwd : '',
+              hook_event_name: opts.event,
+              permission_mode: typeof payload.permission_mode === 'string' ? payload.permission_mode : undefined,
+              wall_ts: new Date().toISOString(),
+              sequence: seq,
+              message_uuid: t.message_uuid,
+              model: t.model,
+              input_tokens: t.input_tokens,
+              output_tokens: t.output_tokens,
+              cache_read_tokens: t.cache_read_tokens,
+              cache_creation_tokens: t.cache_creation_tokens,
+              text: t.text,
+            };
+            await appendEvent(sessionId, ev);
+            newlyEmitted.push(t.message_uuid);
+          }
+          if (newlyEmitted.length > 0) {
+            await persistCursor(sessionId, seen, newlyEmitted);
+          }
+        } catch (err) {
+          // Transcript scan failures must never fail the hook.
+          process.stderr.write(`runtape: transcript scan failed: ${err instanceof Error ? err.message : String(err)}\n`);
+        }
+      }
+    }
+
     spawnFlusher(resolveCliBinPath());
     return 0;
   } catch (err) {
