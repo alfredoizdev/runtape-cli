@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { Command } from 'commander';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
@@ -6,7 +9,12 @@ import { uninstallCommand } from './commands/uninstall.js';
 import { pushCommand } from './commands/push.js';
 import { statusCommand } from './commands/status.js';
 import { runsCommand } from './commands/runs.js';
+import { setupCommand } from './commands/setup.js';
 import { runFlusher } from './lib/flusher.js';
+
+// Read package.json at runtime so --version can never desync from the publish.
+const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+const PKG_VERSION = (JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string }).version;
 
 // Internal flag for the detached flusher daemon — not a user-facing subcommand.
 // Goes before commander.parse so we can short-circuit before commander sees argv.
@@ -24,7 +32,13 @@ if (process.argv.includes('--internal-flusher')) {
   program
     .name('runtape')
     .description('Flight recorder for AI coding agents.')
-    .version('0.1.0');
+    .version(PKG_VERSION);
+
+  program
+    .command('setup')
+    .description('Guided onboarding: login + install hooks + verify in one flow.')
+    .option('--no-browser', 'Do not open the dashboard URL in a browser')
+    .action(async (opts) => process.exit(await setupCommand(opts)));
 
   program
     .command('login')

@@ -18,14 +18,23 @@ npm install -g runtape
 
 ## Get started
 
+One command walks you through the whole setup:
+
 ```bash
-runtape login        # paste the API key from your runtape.dev dashboard
-runtape install      # add hooks to ~/.claude/settings.json
-# …run Claude Code normally…
-runtape runs         # open your dashboard in the browser
+runtape setup
+```
+
+It asks for your backend (defaults to `https://runtape.dev`), opens the dashboard so you can copy your API key, then installs the Claude Code hooks.
+
+After setup, run Claude Code normally and your sessions stream to the dashboard.
+
+```bash
 runtape status       # buffer state, server reachability, flusher PID
+runtape runs         # open your dashboard in the browser
 runtape uninstall    # remove the hooks when you're done
 ```
+
+If you prefer the granular commands instead of the wizard, `runtape login` and `runtape install` are still available — `setup` is just a convenience that chains them.
 
 ## How it works
 
