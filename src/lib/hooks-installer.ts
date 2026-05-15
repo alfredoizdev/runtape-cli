@@ -3,18 +3,18 @@ import { dirname } from 'node:path';
 import { paths } from './paths.js';
 import { SUPPORTED_HOOKS } from './hook-mapping.js';
 
-const HINDSIGHT_MARKER = 'hindsight:managed';
+const RUNTAPE_MARKER = 'runtape:managed';
 
 type HookEntry = { type: 'command'; command: string; [k: string]: unknown };
 type HookMatcher = { matcher: string; hooks: HookEntry[]; [k: string]: unknown };
 type HooksBlock = Record<string, HookMatcher[]>;
 type ClaudeSettings = { hooks?: HooksBlock; [k: string]: unknown };
 
-function hindsightEntry(hookName: string, cliBinPath: string): HookEntry {
+function runtapeEntry(hookName: string, cliBinPath: string): HookEntry {
   return {
     type: 'command',
     command: `${cliBinPath} push --event ${hookName}`,
-    [HINDSIGHT_MARKER]: true,
+    [RUNTAPE_MARKER]: true,
   };
 }
 
@@ -63,9 +63,9 @@ export async function installHooks(scope: 'user' | 'project', cliBinPath: string
       matchers.push(star);
     }
     star.hooks = star.hooks ?? [];
-    const already = star.hooks.some((h) => (h as HookEntry)[HINDSIGHT_MARKER] === true);
+    const already = star.hooks.some((h) => (h as HookEntry)[RUNTAPE_MARKER] === true);
     if (!already) {
-      star.hooks.push(hindsightEntry(hookName, cliBinPath));
+      star.hooks.push(runtapeEntry(hookName, cliBinPath));
       added.push(hookName);
     }
   }
@@ -90,7 +90,7 @@ export async function uninstallHooks(scope: 'user' | 'project'): Promise<Uninsta
       for (const matcher of matchers) {
         if (!Array.isArray(matcher.hooks)) continue;
         const before = matcher.hooks.length;
-        matcher.hooks = matcher.hooks.filter((h) => (h as HookEntry)[HINDSIGHT_MARKER] !== true);
+        matcher.hooks = matcher.hooks.filter((h) => (h as HookEntry)[RUNTAPE_MARKER] !== true);
         if (matcher.hooks.length < before) removed.push(hookName);
       }
       // Clean up matchers that are now empty.

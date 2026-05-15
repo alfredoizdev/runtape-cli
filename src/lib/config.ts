@@ -10,7 +10,7 @@ export const Config = z.object({
 
 export type Config = z.infer<typeof Config>;
 
-const DEFAULT_SERVER_URL = process.env.HINDSIGHT_API_URL ?? 'https://hindsight.dev';
+const DEFAULT_SERVER_URL = process.env.RUNTAPE_API_URL ?? 'https://runtape.dev';
 
 export async function readConfig(): Promise<Config | null> {
   let raw: string;

@@ -1,13 +1,18 @@
 {
-  "name": "hindsight",
-  "version": "0.1.2",
-  "description": "Flight recorder for AI coding agents. Captures Claude Code sessions for replay in hindsight.dev.",
+  "name": "runtape",
+  "version": "0.1.0",
+  "description": "Flight recorder for AI coding agents. Captures Claude Code sessions for replay in runtape.dev.",
   "license": "MIT",
+  "homepage": "https://runtape.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/runtape/runtape.git"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "hindsight": "./bin/hindsight.js"
+    "runtape": "./bin/runtape.js"
   },
   "exports": {
     ".": {

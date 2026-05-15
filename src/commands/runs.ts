@@ -13,7 +13,7 @@ function openCommand(): { cmd: string; args: string[] } {
 export async function runsCommand(): Promise<number> {
   const cfg = await readConfig();
   if (!cfg) {
-    process.stderr.write('Not logged in. Run `hindsight login` first.\n');
+    process.stderr.write('Not logged in. Run `runtape login` first.\n');
     return 1;
   }
 

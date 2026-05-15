@@ -9,7 +9,7 @@ export async function loginCommand(opts: { key?: string; serverUrl?: string }): 
   let apiKey = opts.key;
   if (!apiKey) {
     const rl = createInterface({ input, output });
-    apiKey = (await rl.question('Paste your Hindsight API key (hsk_…): ')).trim();
+    apiKey = (await rl.question('Paste your Runtape API key (hsk_…): ')).trim();
     rl.close();
   }
 
@@ -27,6 +27,6 @@ export async function loginCommand(opts: { key?: string; serverUrl?: string }): 
   }
 
   await writeConfig({ api_key: apiKey, server_url: serverUrl });
-  process.stdout.write(`Saved. You can now run: hindsight install\n`);
+  process.stdout.write(`Saved. You can now run: runtape install\n`);
   return 0;
 }

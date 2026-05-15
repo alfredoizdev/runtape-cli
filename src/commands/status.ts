@@ -18,7 +18,7 @@ async function readFlusherPid(): Promise<number | null> {
 export async function statusCommand(): Promise<number> {
   const cfg = await readConfig();
   if (!cfg) {
-    process.stdout.write('Not logged in. Run `hindsight login`.\n');
+    process.stdout.write('Not logged in. Run `runtape login`.\n');
     return 0;
   }
 

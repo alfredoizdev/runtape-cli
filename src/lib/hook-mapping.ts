@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { HindsightEvent } from '../types.js';
+import { RuntapeEvent } from '../types.js';
 
 // The seven Claude Code hook names we register, plus a sentinel "drop" for unknown events.
 // Validated 2026-05-14 against Claude Code 2.1.128 — see spike findings spec.
@@ -21,13 +21,13 @@ export const SUPPORTED_HOOKS: ClaudeHookName[] = [
   'SubagentStop',
 ];
 
-export type MappedEvent = z.infer<typeof HindsightEvent>;
+export type MappedEvent = z.infer<typeof RuntapeEvent>;
 
 export type MapResult =
   | { kind: 'event'; event: MappedEvent }
   | { kind: 'drop'; reason: string };
 
-// Maps a Claude hook payload + the hook name we were invoked with into a HindsightEvent.
+// Maps a Claude hook payload + the hook name we were invoked with into a RuntapeEvent.
 // Returns { kind: 'drop' } for Notification or unknown events (we just exit cleanly).
 export function mapHookPayload(
   hookName: string,
@@ -96,7 +96,7 @@ export function mapHookPayload(
       return { kind: 'drop', reason: `unsupported hook: ${hookName}` };
   }
 
-  const parsed = HindsightEvent.safeParse(candidate);
+  const parsed = RuntapeEvent.safeParse(candidate);
   if (!parsed.success) {
     return { kind: 'drop', reason: `validation failed: ${parsed.error.issues.map((i) => i.path.join('.') + ': ' + i.message).join('; ')}` };
   }

@@ -7,7 +7,7 @@ import { resolveCliBinPath } from '../lib/cli-bin.js';
 export async function installCommand(opts: { project?: boolean; yes?: boolean }): Promise<number> {
   const cfg = await readConfig();
   if (!cfg) {
-    process.stderr.write('Not logged in. Run `hindsight login` first.\n');
+    process.stderr.write('Not logged in. Run `runtape login` first.\n');
     return 1;
   }
 
@@ -16,7 +16,7 @@ export async function installCommand(opts: { project?: boolean; yes?: boolean })
 
   if (!opts.yes) {
     const rl = createInterface({ input, output });
-    const answer = (await rl.question(`Install Hindsight hooks into ${scope} settings (yes/no)? `)).trim().toLowerCase();
+    const answer = (await rl.question(`Install Runtape hooks into ${scope} settings (yes/no)? `)).trim().toLowerCase();
     rl.close();
     if (answer !== 'y' && answer !== 'yes') {
       process.stdout.write('Aborted.\n');

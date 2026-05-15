@@ -1,4 +1,4 @@
-import type { HindsightEvent } from '../types.js';
+import type { RuntapeEvent } from '../types.js';
 
 export type PostResult =
   | { ok: true; accepted: number; errors: Array<{ index: number; reason: string }> }
@@ -12,7 +12,7 @@ function isRetryableStatus(status: number): boolean {
 export async function postEvents(
   serverUrl: string,
   apiKey: string,
-  events: HindsightEvent[],
+  events: RuntapeEvent[],
 ): Promise<PostResult> {
   let response: Response;
   try {

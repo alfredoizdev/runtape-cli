@@ -22,13 +22,13 @@ if (process.argv.includes('--internal-flusher')) {
   const program = new Command();
 
   program
-    .name('hindsight')
+    .name('runtape')
     .description('Flight recorder for AI coding agents.')
     .version('0.1.2');
 
   program
     .command('login')
-    .description('Paste your API key from hindsight.dev/dashboard and save it locally.')
+    .description('Paste your API key from runtape.dev/dashboard and save it locally.')
     .option('-k, --key <key>', 'API key (skip the prompt)')
     .option('-s, --server-url <url>', 'Override server URL')
     .action(async (opts) => process.exit(await loginCommand(opts)));
@@ -40,14 +40,14 @@ if (process.argv.includes('--internal-flusher')) {
 
   program
     .command('install')
-    .description('Add Hindsight hooks to ~/.claude/settings.json (or project-local with --project).')
+    .description('Add Runtape hooks to ~/.claude/settings.json (or project-local with --project).')
     .option('--project', 'Install into ./.claude/settings.json instead of user-level')
     .option('-y, --yes', 'Skip the confirmation prompt')
     .action(async (opts) => process.exit(await installCommand(opts)));
 
   program
     .command('uninstall')
-    .description('Remove Hindsight hooks from Claude settings.')
+    .description('Remove Runtape hooks from Claude settings.')
     .option('--project', 'Operate on ./.claude/settings.json instead of user-level')
     .action(async (opts) => process.exit(await uninstallCommand(opts)));
 
@@ -64,7 +64,7 @@ if (process.argv.includes('--internal-flusher')) {
 
   program
     .command('runs')
-    .description('Open your Hindsight dashboard in the default browser.')
+    .description('Open your Runtape dashboard in the default browser.')
     .action(async () => process.exit(await runsCommand()));
 
   program.parseAsync(process.argv).catch((err) => {

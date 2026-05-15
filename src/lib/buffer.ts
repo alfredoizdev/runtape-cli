@@ -1,12 +1,12 @@
 import { appendFile, mkdir, readFile, readdir, writeFile, unlink, stat } from 'node:fs/promises';
-import type { HindsightEvent } from '../types.js';
+import type { RuntapeEvent } from '../types.js';
 import { paths } from './paths.js';
 
 // Atomic append-as-line. POSIX guarantees a single write() of <PIPE_BUF bytes (≥512) is
 // atomic, and we further constrain ourselves to one line per call. Two concurrent
 // appenders (e.g. two Claude Code instances writing to the same session — impossible
 // today, but cheap defense) cannot interleave a single line.
-export async function appendEvent(sessionId: string, event: HindsightEvent): Promise<void> {
+export async function appendEvent(sessionId: string, event: RuntapeEvent): Promise<void> {
   await mkdir(paths.bufferDir, { recursive: true });
   const line = JSON.stringify(event) + '\n';
   await appendFile(paths.bufferFile(sessionId), line, { encoding: 'utf8' });
@@ -14,7 +14,7 @@ export async function appendEvent(sessionId: string, event: HindsightEvent): Pro
 
 export type BufferedSession = {
   sessionId: string;
-  events: HindsightEvent[];
+  events: RuntapeEvent[];
   raw: string[]; // Raw lines, so we can rewrite exactly what we read on partial-flush.
 };
 
@@ -38,10 +38,10 @@ export async function readBufferedSession(sessionId: string): Promise<BufferedSe
     throw err;
   }
   const lines = raw.split('\n').filter((l) => l.length > 0);
-  const events: HindsightEvent[] = [];
+  const events: RuntapeEvent[] = [];
   for (const line of lines) {
     try {
-      events.push(JSON.parse(line) as HindsightEvent);
+      events.push(JSON.parse(line) as RuntapeEvent);
     } catch {
       // Skip malformed lines — they could only get there via a half-written disk; drop them.
     }
@@ -63,7 +63,7 @@ export async function rewriteBufferedSession(sessionId: string, unflushedLines: 
   }
   const tmp = file + '.tmp';
   await writeFile(tmp, unflushedLines.map((l) => l + '\n').join(''));
-  // rename is atomic within the same filesystem; both paths are in ~/.hindsight/buffer.
+  // rename is atomic within the same filesystem; both paths are in ~/.runtape/buffer.
   const { rename } = await import('node:fs/promises');
   await rename(tmp, file);
 }

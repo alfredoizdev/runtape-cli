@@ -56,7 +56,7 @@ export const SessionEndEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
   stop_hook_active: z.boolean().optional(),
 });
 
-export const HindsightEvent = z.discriminatedUnion('type', [
+export const RuntapeEvent = z.discriminatedUnion('type', [
   SessionStartEvent,
   UserPromptEvent,
   ToolAttemptEvent,
@@ -65,11 +65,11 @@ export const HindsightEvent = z.discriminatedUnion('type', [
   SessionEndEvent,
 ]);
 
-export type HindsightEvent = z.infer<typeof HindsightEvent>;
+export type RuntapeEvent = z.infer<typeof RuntapeEvent>;
 
 // POST /v1/events body — a batch of up to 100 events.
 export const IngestionRequest = z.object({
-  events: z.array(HindsightEvent).min(1).max(100),
+  events: z.array(RuntapeEvent).min(1).max(100),
 });
 
 export type IngestionRequest = z.infer<typeof IngestionRequest>;

@@ -4,9 +4,9 @@ export async function uninstallCommand(opts: { project?: boolean }): Promise<num
   const scope: 'user' | 'project' = opts.project ? 'project' : 'user';
   const result = await uninstallHooks(scope);
   if (result.removedHooks.length === 0) {
-    process.stdout.write(`No Hindsight hooks found in ${result.settingsPath}.\n`);
+    process.stdout.write(`No Runtape hooks found in ${result.settingsPath}.\n`);
   } else {
-    process.stdout.write(`Removed Hindsight entries from: ${result.removedHooks.join(', ')}\n`);
+    process.stdout.write(`Removed Runtape entries from: ${result.removedHooks.join(', ')}\n`);
   }
   return 0;
 }

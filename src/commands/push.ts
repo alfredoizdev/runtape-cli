@@ -31,7 +31,7 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
   try {
     const cfg = await readConfig();
     if (!cfg) {
-      process.stderr.write('hindsight: not logged in — skipping event\n');
+      process.stderr.write('runtape: not logged in — skipping event\n');
       return 0;
     }
 
@@ -45,13 +45,13 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
     try {
       payload = JSON.parse(raw) as Record<string, unknown>;
     } catch (err) {
-      process.stderr.write(`hindsight: invalid JSON on stdin: ${err instanceof Error ? err.message : String(err)}\n`);
+      process.stderr.write(`runtape: invalid JSON on stdin: ${err instanceof Error ? err.message : String(err)}\n`);
       return 0;
     }
 
     const sessionId = typeof payload.session_id === 'string' ? payload.session_id : null;
     if (!sessionId) {
-      process.stderr.write('hindsight: missing session_id on hook payload\n');
+      process.stderr.write('runtape: missing session_id on hook payload\n');
       return 0;
     }
 
@@ -63,7 +63,7 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
 
     if (result.kind === 'drop') {
       // Notification, unknown hook, or validation failure. Quiet log + exit clean.
-      process.stderr.write(`hindsight: dropped ${opts.event}: ${result.reason}\n`);
+      process.stderr.write(`runtape: dropped ${opts.event}: ${result.reason}\n`);
       return 0;
     }
 
@@ -71,7 +71,7 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
     spawnFlusher(resolveCliBinPath());
     return 0;
   } catch (err) {
-    process.stderr.write(`hindsight: push error: ${err instanceof Error ? err.message : String(err)}\n`);
+    process.stderr.write(`runtape: push error: ${err instanceof Error ? err.message : String(err)}\n`);
     return 0; // Never fail the hook.
   }
 }
