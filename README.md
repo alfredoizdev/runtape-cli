@@ -29,7 +29,7 @@ hindsight uninstall    # remove the hooks when you're done
 
 ## How it works
 
-`hindsight install` adds entries to `~/.claude/settings.json` so that Claude Code fires `hindsight push --event <HookName>` on every relevant hook event. When installed via `npm install -g`, the entry uses the bare command name `hindsight` so it survives package upgrades; in a local-dev or pnpm-workspace context it uses the absolute path from `process.argv[1]`. Override with the `HINDSIGHT_CLI_BIN` env var if you need a specific path. Each invocation appends one validated JSON line to `~/.hindsight/buffer/<session_id>.ndjson` (sub-10ms) and lazily spawns a detached flusher daemon. The daemon batches events (up to 100 per POST) and ships them to the backend with exponential backoff on transient failures. It exits after 30s of idle.
+`hindsight install` adds entries to `~/.claude/settings.json` so that Claude Code fires `hindsight push --event <HookName>` on every relevant hook event. When installed under any `node_modules` tree (npm-global, pnpm-workspace, etc.), the entry uses the bare command name `hindsight` so it survives package upgrades; when run from source (e.g. `tsx bin/hindsight.ts` during local development) it uses the absolute path from `process.argv[1]`. Override with the `HINDSIGHT_CLI_BIN` env var if you need a specific path. Each invocation appends one validated JSON line to `~/.hindsight/buffer/<session_id>.ndjson` (sub-10ms) and lazily spawns a detached flusher daemon. The daemon batches events (up to 100 per POST) and ships them to the backend with exponential backoff on transient failures. It exits after 30s of idle.
 
 ## State on disk
 
