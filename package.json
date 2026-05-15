@@ -6,13 +6,13 @@
   "homepage": "https://runtape.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alfredoizdev/runtape-cli.git"
+    "url": "git+https://github.com/alfredoizdev/runtape-cli.git"
   },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "runtape": "./bin/runtape.js"
+    "runtape": "bin/runtape.js"
   },
   "exports": {
     ".": {
