@@ -22,6 +22,7 @@ npm install -g hindsight
 hindsight login        # paste the API key from your hindsight.dev dashboard
 hindsight install      # add hooks to ~/.claude/settings.json
 # …run Claude Code normally…
+hindsight runs         # open your dashboard in the browser
 hindsight status       # buffer state, server reachability, flusher PID
 hindsight uninstall    # remove the hooks when you're done
 ```
