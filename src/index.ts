@@ -5,6 +5,7 @@ import { installCommand } from './commands/install.js';
 import { uninstallCommand } from './commands/uninstall.js';
 import { pushCommand } from './commands/push.js';
 import { statusCommand } from './commands/status.js';
+import { runsCommand } from './commands/runs.js';
 import { runFlusher } from './lib/flusher.js';
 
 // Internal flag for the detached flusher daemon — not a user-facing subcommand.
@@ -23,7 +24,7 @@ if (process.argv.includes('--internal-flusher')) {
   program
     .name('hindsight')
     .description('Flight recorder for AI coding agents.')
-    .version('0.1.0');
+    .version('0.1.1');
 
   program
     .command('login')
@@ -60,6 +61,11 @@ if (process.argv.includes('--internal-flusher')) {
     .command('status')
     .description('Show current login, buffer state, and server reachability.')
     .action(async () => process.exit(await statusCommand()));
+
+  program
+    .command('runs')
+    .description('Open your Hindsight dashboard in the default browser.')
+    .action(async () => process.exit(await runsCommand()));
 
   program.parseAsync(process.argv).catch((err) => {
     console.error(err);
