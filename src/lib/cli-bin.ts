@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 
 // Returns an absolute path to the `hindsight` binary the user just invoked.
 // This is what we write into `~/.claude/settings.json` so the hooks call the same install.
@@ -10,8 +10,13 @@ export function resolveCliBinPath(): string {
 
   const argv1 = process.argv[1];
   if (argv1) {
+    // If we live under a node_modules tree, the absolute path embeds the
+    // package's extraction location, which changes on `npm install -g <newer>`.
+    // Writing that path into ~/.claude/settings.json would break the hook on
+    // the next upgrade. Fall back to the bare command name — `hindsight` is on
+    // PATH after `npm install -g`, and a fresh install re-points the symlink.
+    if (argv1.includes(`${sep}node_modules${sep}`)) return 'hindsight';
     try {
-      // argv[1] points at .../node_modules/.bin/hindsight or .../bin/hindsight.js depending on install style.
       return resolve(argv1);
     } catch {
       /* fall through */
