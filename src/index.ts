@@ -24,7 +24,7 @@ if (process.argv.includes('--internal-flusher')) {
   program
     .name('runtape')
     .description('Flight recorder for AI coding agents.')
-    .version('0.1.2');
+    .version('0.1.0');
 
   program
     .command('login')
