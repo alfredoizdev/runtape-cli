@@ -66,6 +66,10 @@ The schemas live in `src/types.ts`. The package's `exports` map points TypeScrip
 
 ## Changelog
 
+### 0.2.1 — 2026-05-15
+
+- **Skip `<synthetic>` turns.** Claude Code emits placeholder assistant messages with `model: "<synthetic>"` (compaction markers, internal state) that always have zero usage. The transcript scanner now drops them so the dashboard doesn't show empty no-cost turns.
+
 ### 0.2.0 — 2026-05-15
 
 - **Model + token usage per turn.** The CLI now reads the Claude Code transcript JSONL on `PostToolUse` / `Stop` / `SubagentStop` and emits a new `assistant_turn` event for every assistant message, carrying `model`, `input_tokens`, `output_tokens`, `cache_read_tokens`, and `cache_creation_tokens`. The dashboard surfaces a per-turn model + cost pill and a run-level total.

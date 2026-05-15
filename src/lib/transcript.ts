@@ -93,7 +93,10 @@ export async function readNewAssistantTurns(
     if (uuid === '' || seen.has(uuid)) continue;
     const msg = parsed.message ?? {};
     const model = typeof msg.model === 'string' ? msg.model : '';
-    if (model === '') continue;
+    // Claude Code emits placeholder turns with model "<synthetic>" (compaction
+    // summaries, internal markers) that always have zero usage. Skip them —
+    // they add noise without information.
+    if (model === '' || model === '<synthetic>') continue;
     const usage = msg.usage ?? {};
     turns.push({
       message_uuid: uuid,
