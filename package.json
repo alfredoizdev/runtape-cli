@@ -1,6 +1,6 @@
 {
   "name": "hindsight",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Flight recorder for AI coding agents. Captures Claude Code sessions for replay in hindsight.dev.",
   "license": "MIT",
   "type": "module",

@@ -24,7 +24,7 @@ if (process.argv.includes('--internal-flusher')) {
   program
     .name('hindsight')
     .description('Flight recorder for AI coding agents.')
-    .version('0.1.1');
+    .version('0.1.2');
 
   program
     .command('login')
