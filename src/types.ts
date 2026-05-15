@@ -10,9 +10,15 @@ const ClaudeHookBase = z.object({
 });
 
 // CLI-augmented envelope adds monotonic ordering + wall-clock timestamp.
+// agent_tool_use_id is set when the CLI is synthesizing events from a
+// subagent transcript — it carries the parent Agent step's tool_use_id so
+// the server can resolve parent_step_id deterministically instead of
+// relying on the temporal open-stack heuristic. Optional so the field is
+// absent for normal top-level events.
 const CliAugment = z.object({
   wall_ts: z.string().datetime(),
   sequence: z.number().int().nonnegative(),
+  agent_tool_use_id: z.string().min(1).optional(),
 });
 
 export const SessionStartEvent = ClaudeHookBase.extend(CliAugment.shape).extend({

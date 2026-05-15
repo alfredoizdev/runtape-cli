@@ -6,7 +6,7 @@
 
 ## Status
 
-v0.2 — Adds model + token usage capture per turn and tool error surfacing.
+v0.3 — Adds subagent (Task tool) capture. The full internal session of every spawned agent — its user prompt, assistant turns with model + token usage, and tool calls — is now recorded as nested children of the parent `Agent` step.
 
 ## Install
 
@@ -65,6 +65,11 @@ import { RuntapeEvent, IngestionRequest } from "runtape/types";
 The schemas live in `src/types.ts`. The package's `exports` map points TypeScript at the source file (no build step required for type consumers) and Node at the compiled `dist/types.js`.
 
 ## Changelog
+
+### 0.3.0 — 2026-05-15
+
+- **Subagent capture.** On `SubagentStop`, the CLI now reads the subagent's `agent_transcript_path` and synthesizes the full internal event stream — user prompt, assistant turns (with model + usage), tool attempts and calls. Every synthesized event carries `agent_tool_use_id` so the server resolves it as a child of the parent `Agent` step. The dashboard renders these inline as nested rows under the Agent.
+- **`agent_tool_use_id` envelope field.** Optional on every event type. Server-side, when set, it overrides the open-Agent temporal heuristic and resolves the parent step directly.
 
 ### 0.2.1 — 2026-05-15
 

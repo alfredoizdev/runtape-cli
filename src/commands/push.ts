@@ -5,6 +5,7 @@ import { appendEvent } from '../lib/buffer.js';
 import { readConfig } from '../lib/config.js';
 import { resolveCliBinPath } from '../lib/cli-bin.js';
 import { readNewAssistantTurns, persistCursor } from '../lib/transcript.js';
+import { readNewSubagentEvents, persistSubagentCursor } from '../lib/subagent-transcript.js';
 import type { RuntapeEvent } from '../types.js';
 
 async function readStdin(): Promise<string> {
@@ -109,6 +110,81 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
         } catch (err) {
           // Transcript scan failures must never fail the hook.
           process.stderr.write(`runtape: transcript scan failed: ${err instanceof Error ? err.message : String(err)}\n`);
+        }
+      }
+    }
+
+    // On SubagentStop, ALSO scan the subagent's own transcript and synthesize
+    // the full event stream of its internal session — user prompt, assistant
+    // turns with model+usage, plus tool_attempt/tool_call pairs. Tag every
+    // synthesized event with agent_tool_use_id so the server can resolve the
+    // parent Agent step and stamp parent_step_id deterministically.
+    if (opts.event === 'SubagentStop') {
+      const subTranscript = typeof payload.agent_transcript_path === 'string' ? payload.agent_transcript_path : '';
+      const agentToolUseId = typeof payload.agent_id === 'string' ? payload.agent_id : '';
+      if (subTranscript !== '' && agentToolUseId !== '') {
+        try {
+          const { emits, seen } = await readNewSubagentEvents(sessionId, agentToolUseId, subTranscript);
+          const newlyEmitted: string[] = [];
+          const cwd = typeof payload.cwd === 'string' ? payload.cwd : '';
+          for (const e of emits) {
+            const seq = await nextSequence(sessionId);
+            const baseEnvelope = {
+              session_id: sessionId,
+              transcript_path: subTranscript,
+              cwd,
+              hook_event_name: opts.event,
+              permission_mode: typeof payload.permission_mode === 'string' ? payload.permission_mode : undefined,
+              wall_ts: new Date().toISOString(),
+              sequence: seq,
+              agent_tool_use_id: agentToolUseId,
+            };
+            let ev: RuntapeEvent | null = null;
+            if (e.kind === 'user_prompt') {
+              ev = { ...baseEnvelope, type: 'user_prompt', prompt: e.prompt };
+            } else if (e.kind === 'assistant_turn') {
+              ev = {
+                ...baseEnvelope,
+                type: 'assistant_turn',
+                message_uuid: e.message_uuid,
+                model: e.model,
+                input_tokens: e.input_tokens,
+                output_tokens: e.output_tokens,
+                cache_read_tokens: e.cache_read_tokens,
+                cache_creation_tokens: e.cache_creation_tokens,
+                text: e.text,
+              };
+            } else if (e.kind === 'tool_attempt') {
+              ev = {
+                ...baseEnvelope,
+                type: 'tool_attempt',
+                tool_name: e.tool_name,
+                tool_input: e.tool_input,
+                tool_use_id: e.tool_use_id,
+              };
+            } else if (e.kind === 'tool_call') {
+              ev = {
+                ...baseEnvelope,
+                type: 'tool_call',
+                tool_name: e.tool_name,
+                tool_input: null,
+                tool_response: e.tool_response,
+                tool_use_id: e.tool_use_id,
+                duration_ms: 0,
+                is_error: e.is_error,
+                error_message: e.error_message,
+              };
+            }
+            if (ev) {
+              await appendEvent(sessionId, ev);
+              newlyEmitted.push(e.uuid);
+            }
+          }
+          if (newlyEmitted.length > 0) {
+            await persistSubagentCursor(sessionId, agentToolUseId, seen, newlyEmitted);
+          }
+        } catch (err) {
+          process.stderr.write(`runtape: subagent transcript scan failed: ${err instanceof Error ? err.message : String(err)}\n`);
         }
       }
     }
