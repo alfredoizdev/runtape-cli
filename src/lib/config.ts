@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { paths } from './paths.js';
 
 export const Config = z.object({
-  api_key: z.string().regex(/^hsk_[a-f0-9]{64}$/, 'api_key must be hsk_ followed by 64 hex chars'),
+  api_key: z.string().regex(/^rtk_[a-f0-9]{64}$/, 'api_key must be rtk_ followed by 64 hex chars'),
   server_url: z.string().url(),
 });
 

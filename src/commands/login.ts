@@ -9,13 +9,13 @@ export async function loginCommand(opts: { key?: string; serverUrl?: string }): 
   let apiKey = opts.key;
   if (!apiKey) {
     const rl = createInterface({ input, output });
-    apiKey = (await rl.question('Paste your Runtape API key (hsk_…): ')).trim();
+    apiKey = (await rl.question('Paste your Runtape API key (rtk_…): ')).trim();
     rl.close();
   }
 
   const validation = Config.shape.api_key.safeParse(apiKey);
   if (!validation.success) {
-    process.stderr.write(`Invalid API key format. Expected hsk_<64 hex chars>.\n`);
+    process.stderr.write(`Invalid API key format. Expected rtk_<64 hex chars>.\n`);
     return 2;
   }
 
