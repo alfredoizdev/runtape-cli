@@ -10,6 +10,13 @@ import { pushCommand } from './commands/push.js';
 import { statusCommand } from './commands/status.js';
 import { runsCommand } from './commands/runs.js';
 import { setupCommand } from './commands/setup.js';
+import {
+  watchListCommand,
+  watchIgnoreCommand,
+  watchOnlyCommand,
+  watchUnignoreCommand,
+  watchResetCommand,
+} from './commands/watch.js';
 import { runFlusher } from './lib/flusher.js';
 
 // Read package.json at runtime so --version can never desync from the publish.
@@ -80,6 +87,30 @@ if (process.argv.includes('--internal-flusher')) {
     .command('runs')
     .description('Open your Runtape dashboard in the default browser.')
     .action(async () => process.exit(await runsCommand()));
+
+  const watch = program
+    .command('watch')
+    .description('Control which directories the hooks capture (allow / deny lists).');
+  watch
+    .command('list')
+    .description('Show the current watch mode and paths.')
+    .action(async () => process.exit(await watchListCommand()));
+  watch
+    .command('ignore <path>')
+    .description('Stop capturing sessions whose cwd is under <path>. Switches mode to deny_list.')
+    .action(async (path: string) => process.exit(await watchIgnoreCommand(path)));
+  watch
+    .command('only <path>')
+    .description('Capture ONLY sessions whose cwd is under <path>. Switches mode to allow_list.')
+    .action(async (path: string) => process.exit(await watchOnlyCommand(path)));
+  watch
+    .command('unignore <path>')
+    .description('Remove <path> from the current watch list.')
+    .action(async (path: string) => process.exit(await watchUnignoreCommand(path)));
+  watch
+    .command('reset')
+    .description('Capture every session (clear all watch settings).')
+    .action(async () => process.exit(await watchResetCommand()));
 
   program.parseAsync(process.argv).catch((err) => {
     console.error(err);

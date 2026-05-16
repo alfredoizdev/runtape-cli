@@ -5,9 +5,13 @@ import { listBufferedSessions, readBufferedSession, rewriteBufferedSession } fro
 import { postEvents } from './api.js';
 import { paths } from './paths.js';
 
-const POLL_INTERVAL_MS = 1500;
+// Tuned in 0.5.0 to cut PostgREST/Vercel invocation pressure under heavy
+// sessions. A power Claude Code user generates 5-10 events/sec; 500-event
+// batches at a 5s cadence still feel real-time in the dashboard while
+// reducing request count ~5x vs the prior 100-event/1.5s defaults.
+const POLL_INTERVAL_MS = 5_000;
 const IDLE_EXIT_MS = 30_000;
-const BATCH_MAX = 100;
+const BATCH_MAX = 500;
 const BACKOFF_STEPS_MS = [1000, 2000, 4000, 8000, 16_000, 32_000, 60_000];
 
 async function log(line: string): Promise<void> {

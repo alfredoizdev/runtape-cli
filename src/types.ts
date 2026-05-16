@@ -77,10 +77,20 @@ export const SubagentEndEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
   stop_hook_active: z.boolean().optional(),
 });
 
+// Stop hook (fires every turn). Despite the literal name 'session_end', this
+// is "turn end" semantically. Kept for backward compatibility with CLI <= 0.3.x.
+// New CLIs still emit this; the server interprets it as "run is idle".
 export const SessionEndEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
   type: z.literal('session_end'),
   last_assistant_message: z.string().optional(),
   stop_hook_active: z.boolean().optional(),
+});
+
+// SessionEnd hook (fires once when Claude Code actually closes the session).
+// Server uses this to promote the run from 'idle' to 'ended'.
+export const SessionCloseEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
+  type: z.literal('session_close'),
+  reason: z.string().optional(),
 });
 
 export const RuntapeEvent = z.discriminatedUnion('type', [
@@ -91,6 +101,7 @@ export const RuntapeEvent = z.discriminatedUnion('type', [
   AssistantTurnEvent,
   SubagentEndEvent,
   SessionEndEvent,
+  SessionCloseEvent,
 ]);
 
 export type RuntapeEvent = z.infer<typeof RuntapeEvent>;

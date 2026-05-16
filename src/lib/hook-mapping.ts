@@ -10,6 +10,7 @@ export type ClaudeHookName =
   | 'PostToolUse'
   | 'Stop'
   | 'SubagentStop'
+  | 'SessionEnd'
   | 'Notification';
 
 export const SUPPORTED_HOOKS: ClaudeHookName[] = [
@@ -19,6 +20,7 @@ export const SUPPORTED_HOOKS: ClaudeHookName[] = [
   'PostToolUse',
   'Stop',
   'SubagentStop',
+  'SessionEnd',
 ];
 
 export type MappedEvent = z.infer<typeof RuntapeEvent>;
@@ -112,11 +114,21 @@ export function mapHookPayload(
       break;
     }
     case 'Stop':
+      // Despite the event type literal, this is "turn end" — Stop fires every
+      // time the assistant yields back to the user. Server treats it as
+      // 'run is idle'. Real session close uses SessionEnd → 'session_close'.
       candidate = {
         ...base,
         type: 'session_end',
         last_assistant_message: payload.last_assistant_message,
         stop_hook_active: payload.stop_hook_active,
+      };
+      break;
+    case 'SessionEnd':
+      candidate = {
+        ...base,
+        type: 'session_close',
+        reason: payload.reason,
       };
       break;
     case 'SubagentStop':

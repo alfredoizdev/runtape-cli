@@ -6,7 +6,17 @@ import { readConfig } from '../lib/config.js';
 import { resolveCliBinPath } from '../lib/cli-bin.js';
 import { readNewAssistantTurns, persistCursor } from '../lib/transcript.js';
 import { readNewSubagentEvents, persistSubagentCursor } from '../lib/subagent-transcript.js';
+import { isCaptureAllowed } from '../lib/watch.js';
 import type { RuntapeEvent } from '../types.js';
+
+function isDisabledByEnv(): boolean {
+  // Surgical opt-out for individual sessions:
+  //   `RUNTAPE_DISABLE=1 claude` skips capture entirely.
+  // Accept `1`, `true`, `yes` (case-insensitive) so any reasonable truthy
+  // value works. Empty / "0" / "false" → not disabled.
+  const v = (process.env.RUNTAPE_DISABLE ?? '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
+}
 
 async function readStdin(): Promise<string> {
   if (process.stdin.isTTY) return '';
@@ -32,6 +42,9 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
   // The contract is: never block the hook. If we can't parse/auth/whatever, exit 0 quietly
   // (printing to stderr is fine; printing to stdout could be parsed by Claude Code).
   try {
+    // Earliest opt-out: env var fully bypasses the CLI. Cheap, no I/O.
+    if (isDisabledByEnv()) return 0;
+
     const cfg = await readConfig();
     if (!cfg) {
       process.stderr.write('runtape: not logged in — skipping event\n');
@@ -55,6 +68,14 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
     const sessionId = typeof payload.session_id === 'string' ? payload.session_id : null;
     if (!sessionId) {
       process.stderr.write('runtape: missing session_id on hook payload\n');
+      return 0;
+    }
+
+    // Watch list gate: if the user has configured allow_list / deny_list and
+    // this cwd doesn't pass, silently no-op the hook. Nothing hits the buffer,
+    // nothing flushes — the server never sees a byte from this session.
+    const cwd = typeof payload.cwd === 'string' ? payload.cwd : '';
+    if (cwd && !isCaptureAllowed(cfg.watch, cwd)) {
       return 0;
     }
 

@@ -3,9 +3,26 @@ import { dirname } from 'node:path';
 import { z } from 'zod';
 import { paths } from './paths.js';
 
+// Path watcher: controls which directories get captured by the CLI hooks.
+//   allow_all  — capture every session (default; equivalent to no `watch` key).
+//   deny_list  — capture every session EXCEPT cwds matching `paths`.
+//   allow_list — capture ONLY cwds matching `paths`.
+// Matching is prefix-based on absolute, normalized paths.
+export const WatchMode = z.enum(['allow_all', 'deny_list', 'allow_list']);
+export type WatchMode = z.infer<typeof WatchMode>;
+
+export const WatchConfig = z.object({
+  mode: WatchMode.default('allow_all'),
+  paths: z.array(z.string()).default([]),
+});
+export type WatchConfig = z.infer<typeof WatchConfig>;
+
 export const Config = z.object({
   api_key: z.string().regex(/^rtk_[a-f0-9]{64}$/, 'api_key must be rtk_ followed by 64 hex chars'),
   server_url: z.string().url(),
+  // Optional so any existing 0.5.x config keeps parsing — push.ts treats
+  // missing/undefined as allow_all.
+  watch: WatchConfig.optional(),
 });
 
 export type Config = z.infer<typeof Config>;
