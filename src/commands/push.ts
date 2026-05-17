@@ -7,6 +7,7 @@ import { resolveCliBinPath } from '../lib/cli-bin.js';
 import { readNewAssistantTurns, persistCursor } from '../lib/transcript.js';
 import { readNewSubagentEvents, persistSubagentCursor } from '../lib/subagent-transcript.js';
 import { isCaptureAllowed } from '../lib/watch.js';
+import { detectProjectName } from '../lib/project-name.js';
 import type { RuntapeEvent } from '../types.js';
 
 function isDisabledByEnv(): boolean {
@@ -89,6 +90,17 @@ export async function pushCommand(opts: { event: string }): Promise<number> {
       // Notification, unknown hook, or validation failure. Quiet log + exit clean.
       process.stderr.write(`runtape: dropped ${opts.event}: ${result.reason}\n`);
       return 0;
+    }
+
+    // Enrich SessionStart with a best-effort project label derived from cwd.
+    // Done here (async) rather than inside the sync mapHookPayload so the
+    // mapper stays pure. detectProjectName never throws — falls back to the
+    // basename of cwd — so we don't need to wrap in try/catch.
+    if (result.event.type === 'session_start' && cwd) {
+      const projectName = await detectProjectName(cwd);
+      if (projectName) {
+        result.event.project_name = projectName;
+      }
     }
 
     await appendEvent(sessionId, result.event);

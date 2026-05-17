@@ -24,6 +24,11 @@ const CliAugment = z.object({
 export const SessionStartEvent = ClaudeHookBase.extend(CliAugment.shape).extend({
   type: z.literal('session_start'),
   source: z.string(),
+  // Best-effort project label derived from the session's cwd. The CLI fills
+  // this in on SessionStart (outermost git repo basename, falling back to
+  // nearest package.json name, finally to basename(cwd)). Optional so older
+  // CLIs that never emit it remain compatible.
+  project_name: z.string().min(1).optional(),
 });
 
 export const UserPromptEvent = ClaudeHookBase.extend(CliAugment.shape).extend({

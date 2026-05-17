@@ -1,6 +1,6 @@
 {
   "name": "runtape",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Flight recorder for AI coding agents. Captures Claude Code sessions for replay in runtape.dev.",
   "license": "MIT",
   "homepage": "https://runtape.dev",
